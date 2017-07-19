@@ -1,9 +1,13 @@
 /*
 *
-* GENERAL INFO
-* "private" unecessary?***
-*/
-class GeneralInfo{
+* GENERAL INFO & DIA_UMPIRE SIGNAL EXTRACTION
+* "private" unecessary?**
+**/
+
+GUI DIA_UMP = new GUI();
+new DIA_UMP.setVisible(true);
+
+class DIA_UMP{
 import java.util.*;
 import java.util.Scanner;
 import java.util.Iterator;
@@ -539,32 +543,32 @@ import java.awt.event.FocusListener;
 *
 */
 
-public int checkSelectedSections() {
-/* Create a boolean to check if any errors occur when cheching each input */
-	boolean errorOccurred = false;
+    public int checkSelectedSections() {
+    /* Create a boolean to check if any errors occur when cheching each input */
+	   boolean errorOccurred = false;
 
-/* Clear the errors and fieldData string buffers*/
-	errors.delete(0, errors.length());
-	fieldData.delete(0, fieldData.length());
+    /* Clear the errors and fieldData string buffers*/
+	   errors.delete(0, errors.length());
+	   fieldData.delete(0, fieldData.length());
 				
 
-/* Checking if the General Info inputs are filled out */
-	if(inputDir_Text.getText().equals("") || outputDir_Text.getText().equals("") || 
+    /* Checking if the General Info inputs are filled out */
+	   if(inputDir_Text.getText().equals("") || outputDir_Text.getText().equals("") || 
 				                                      numOfThreads_Text.getText().equals("") ||
 				                                       amountOfRam_Text.getText().equals("")) {
 					JOptionPane.showMessageDialog(null, "         Fill in all the fields");
-		return 0;
+		  return 0;
 		}
 
-/* Checking if the General Info files entered exist */
-	if(!checkIfFilesExist(generalInfoOpt)) {
-		errorOccurred = true;
+    /* Checking if the General Info files entered exist */
+	   if(!checkIfFilesExist(generalInfoOpt)) {
+		  errorOccurred = true;
 				}
 				
-/* If the diaUmpire_pipe checkbox was checked */
-	if(runDiaUmpire) {
+        /* If the diaUmpire_pipe checkbox was checked */
+	   if(runDiaUmpire) {
 
-	/* Checking if the diaUmpire_pipe.py Info inputs are filled out */
+	   /* Checking if the diaUmpire_pipe.py Info inputs are filled out */
 		if(msconvertDir_Text.getText().equals("") || mzxmlToMgfParams_Text.equals("") ||
 					                                      indexmzXMLDir_Text.getText().equals("") ||
 					                              dia_Umpire_SeJarDir_Text.getText().equals("") ||
@@ -574,10 +578,10 @@ public int checkSelectedSections() {
 			}
 
 			/* Checking if the diaUmpire_pipe.py Info files entered exist */
-			if(!checkIfFilesExist(diaUmpireOpt)) {
-				errorOccurred = true;
-					}
+		if(!checkIfFilesExist(diaUmpireOpt)) {
+			errorOccurred = true;
 				}
+			}
 		
 		if( errorOccurred ) {
 			return 1;
@@ -587,3 +591,785 @@ public int checkSelectedSections() {
 		}
 
 		
+    /*
+     *
+     *
+     */
+    public void createMapDIAInput( int sizeOfMatrix, ArrayList<String> mapDiaLabels ) {
+
+        JCheckBox[][] matrix = new JCheckBox[sizeOfMatrix][sizeOfMatrix];
+        int[][] matrixInt = new int[sizeOfMatrix][sizeOfMatrix];
+
+        mapDIAClosed = false;
+
+        EventQueue.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                //int sizeOfMatrix = 3;
+
+
+                JFrame frame = new JFrame("CheckBox Matrix");
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+                JPanel pane = new JPanel(new GridBagLayout());
+                GridBagConstraints c = new GridBagConstraints();
+
+                c.ipadx = 5;
+                c.ipady = 5;
+                c.insets = new Insets(1, 4, 1, 4);
+                //c.anchor = GridBagConstraints.LAST_LINE_START;
+                //c.fill = GridBagConstraints.HORIZONTAL;
+
+                for( int x = 1; x <= sizeOfMatrix; x++ ) {
+                    c.gridx = x;
+                    c.gridy = 0;
+                    pane.add(new JLabel(""+mapDiaLabels.get(x-1)), c);
+                }
+
+                for( int y = 1; y <= sizeOfMatrix; y++ ) {
+                    c.gridx = 0;
+                    c.gridy = y;
+                    pane.add(new JLabel(""+mapDiaLabels.get(y-1)), c);
+                }
+
+                for(int x = 0; x < sizeOfMatrix; x++) {
+                    for(int y = 0; y < sizeOfMatrix; y++) {
+                        matrixInt[x][y] = 0;
+                    }
+                }
+
+                for(int yLoc = 0; yLoc < sizeOfMatrix; yLoc++ ) {
+                    for(int xLoc = 0; xLoc < sizeOfMatrix; xLoc++ ) {
+                        c.gridx = xLoc+1;
+                        c.gridy = yLoc+1;
+                        matrix[yLoc][xLoc] = new JCheckBox();
+
+                        matrix[yLoc][xLoc].addItemListener( new ItemListener() {
+                            @Override
+                            public void itemStateChanged(ItemEvent item) {
+                                checkboxStringBuf.delete(0, checkboxStringBuf.length());
+
+                                if(item.getStateChange() == ItemEvent.SELECTED) {
+                                    JCheckBox source = (JCheckBox) item.getSource();
+                                    boolean selected = source.isSelected();
+                                    int cbRow = -1;
+                                    int cbCol = -1;
+                                    for (int r = 0; r < matrix.length; r++) {
+                                        for (int c = 0; c < matrix[r].length; c++) {
+                                            if (source.equals(matrix[r][c])) {
+                                                cbRow = r;
+                                                cbCol = c;
+                                            }
+                                        }
+                                    }
+
+                                    matrixInt[cbCol][cbRow] = 1;
+
+                                    //System.out.println("row: " + (cbRow+1) + " column: " + (cbCol+1));
+                                }
+                                else {
+                                    JCheckBox source = (JCheckBox) item.getSource();
+                                    boolean selected = source.isSelected();
+                                    int cbRow = -1;
+                                    int cbCol = -1;
+                                    for (int r = 0; r < matrix.length; r++) {
+                                        for (int c = 0; c < matrix[r].length; c++) {
+                                            if (source.equals(matrix[r][c])) {
+                                                cbRow = r;
+                                                cbCol = c;
+                                            }
+                                        }
+                                    }
+
+                                    matrixInt[cbCol][cbRow] = 0;
+
+                                    //System.out.println("delete: row: " + (cbRow+1) + " column: " + (cbCol+1));
+                                }
+
+                                for(int y = 0; y < sizeOfMatrix; y++) {
+                                    for(int x = 0; x < sizeOfMatrix; x++) {
+                                        if(x == y) {
+                                            checkboxStringBuf.append("-");
+                                        }
+                                        else {
+                                            checkboxStringBuf.append(matrixInt[x][y]);
+                                        }
+
+                                        if(x != sizeOfMatrix -1) {
+                                            checkboxStringBuf.append(" ");
+                                        }
+                                    }
+                                    checkboxStringBuf.append("\r\n");
+                                }
+
+                                //System.out.println(checkboxStringBuf.toString());
+                                
+                            }
+                        });
+
+                        pane.add(matrix[yLoc][xLoc], c);
+                        if(xLoc == yLoc) {
+                            matrix[yLoc][xLoc].setEnabled(false);
+                        }
+                    }
+                }
+
+
+                JPanel northPane = new JPanel(new GridBagLayout());
+                GridBagConstraints otherConstraints = new GridBagConstraints();
+                otherConstraints.anchor = GridBagConstraints.LAST_LINE_START;
+                otherConstraints.fill = GridBagConstraints.HORIZONTAL;
+                otherConstraints.ipadx = 5;
+                otherConstraints.ipady = 5;
+                otherConstraints.insets = new Insets(1, 4, 1, 4);
+
+                int x = 0;
+                int y = 0;
+                otherConstraints.gridx = 0;
+                otherConstraints.gridy = y;
+                northPane.add(new JLabel("mapDIA Input = "), otherConstraints);
+                otherConstraints.gridx = 1;
+                otherConstraints.gridy = y;
+                mapDIA_input_Text.setPreferredSize( new Dimension(textFieldWidth, textFieldHeight) );
+                northPane.add(mapDIA_input_Text, otherConstraints);
+                
+                (finishedButton).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        boolean error = false;
+                        StringBuffer errorBuf = new StringBuffer();
+
+                        if(checkboxStringBuf.toString().replaceAll("-", "").replaceAll("\r\n", "")
+                                            .replaceAll("0", "").replaceAll(" ", "").equals("")) {
+                            errorBuf.append("You did not select any comparison checkboxes\r\n");
+                            error = true;
+                        }
+
+                        if(error == true) {
+                            JOptionPane.showMessageDialog(null, errorBuf.toString());
+                            errorBuf.delete(0, errorBuf.length());
+                            return;
+                        }
+                    }
+
+    
+    /*
+     *
+     *
+     */
+    public void createLoadUserParams() {
+        JButton user1 = new JButton("Load 1");
+        JButton user2 = new JButton("Load 2");
+        JButton user3 = new JButton("Load 3");
+        JButton user4 = new JButton("Load 4");
+
+        loadParamsClosed = false;
+
+        EventQueue.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                JFrame frame = new JFrame("Load User Params");
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+                JPanel pane = new JPanel(new GridBagLayout());
+                GridBagConstraints c = new GridBagConstraints();
+
+                c.ipadx = 10;
+                c.ipady = 10;
+                c.insets = new Insets(10, 4, 10, 4);
+
+                c.gridx = 0;
+                c.gridy = 0;
+                pane.add(user1, c);
+
+                c.gridx = 0;
+                c.gridy = 1;
+                pane.add(user2, c);
+
+                c.gridx = 0;
+                c.gridy = 2;
+                pane.add(user3, c);
+
+                c.gridx = 0;
+                c.gridy = 3;
+                pane.add(user4, c);
+
+                (user1).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user1Settings = new File(System.getProperty("user.dir") + "//userParams//user1.parameters");
+                        readFile(user1Settings);
+                        loadFile();
+                        frame.dispose();
+                        loadParamsClosed = true;
+                    }
+                });;
+
+                (user2).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user2Settings = new File(System.getProperty("user.dir") + "//userParams//user2.parameters");
+                        readFile(user2Settings);
+                        loadFile();
+                        frame.dispose();
+                        loadParamsClosed = true;
+                    }
+                });;
+
+                (user3).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user3Settings = new File(System.getProperty("user.dir") + "//userParams//user3.parameters");
+                        readFile(user3Settings);
+                        loadFile();
+                        frame.dispose();
+                        loadParamsClosed = true;
+                    }
+                });;
+
+                (user4).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user4Settings = new File(System.getProperty("user.dir") + "//userParams//user4.parameters");
+                        readFile(user4Settings);
+                        loadFile();
+                        frame.dispose();
+                        loadParamsClosed = true;
+                    }
+                });;
+
+                frame.getContentPane().add(BorderLayout.CENTER, pane);
+                frame.pack();
+                frame.setLocationByPlatform(true);
+                frame.setVisible(true);
+                frame.setResizable(false);
+
+                frame.addWindowListener(new WindowAdapter() {
+                    public void windowClosing(WindowEvent e) {
+                        loadParamsClosed = true;
+                    }
+                });
+            }
+        });
+    }
+
+
+    /*
+     *
+     *
+     */
+    public boolean readFile( File file ) {
+        parametersStringBuf.delete(0, parametersStringBuf.length());
+
+        Scanner fileToRead = null;
+        try {
+            fileToRead = new Scanner( file );
+            String line;
+            while( fileToRead.hasNextLine() && (line = fileToRead.nextLine()) != null ) {
+                parametersStringBuf.append(line);
+                parametersStringBuf.append("\r\n");
+            }
+        } catch (FileNotFoundException e) {
+            //e.printStackTrace();
+            return false;
+        } finally {
+            fileToRead.close();
+            return true;
+        }
+    }
+
+
+
+    /*
+     *
+     *
+     */
+    public void loadFile() {
+        ArrayList<String> parametersList = new ArrayList<String>();
+
+        for(String retval : parametersStringBuf.toString().split("\r\n")) {
+            parametersList.add(retval);
+        }
+
+        String [] parametersArray = new String[parametersList.size()];
+
+        for(int index = 0; index < parametersList.size() ; index++) {
+            parametersArray[index] = parametersList.get(index);
+        }
+
+        setFieldData(parametersArray);
+    }
+
+
+
+    /*
+     *
+     *
+     */
+    public void createSaveUserParams() {
+        JButton user1 = new JButton("Save 1");
+        JButton user2 = new JButton("Save 2");
+        JButton user3 = new JButton("Save 3");
+        JButton user4 = new JButton("Save 4");
+
+        saveParamsClosed = false;
+
+        EventQueue.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                JFrame frame = new JFrame("Save User Parameters");
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+                JPanel pane = new JPanel(new GridBagLayout());
+                GridBagConstraints c = new GridBagConstraints();
+
+                c.ipadx = 10;
+                c.ipady = 10;
+                c.insets = new Insets(10, 4, 10, 4);
+
+                c.gridx = 0;
+                c.gridy = 0;
+                pane.add(user1, c);
+
+                c.gridx = 0;
+                c.gridy = 1;
+                pane.add(user2, c);
+
+                c.gridx = 0;
+                c.gridy = 2;
+                pane.add(user3, c);
+
+                c.gridx = 0;
+                c.gridy = 3;
+                pane.add(user4, c);
+
+                (user1).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user1Settings = new File(System.getProperty("user.dir") + "//userParams//user1.parameters");
+                        grabFieldData();
+                        saveFile(user1Settings, fieldData);
+                        frame.dispose();
+                        saveParamsClosed = true;
+                    }
+                });;
+
+                (user2).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user2Settings = new File(System.getProperty("user.dir") + "//userParams//user2.parameters");
+                        grabFieldData();
+                        saveFile(user2Settings, fieldData);
+                        frame.dispose();
+                        saveParamsClosed = true;
+                    }
+                });;
+
+                (user3).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user3Settings = new File(System.getProperty("user.dir") + "//userParams//user3.parameters");
+                        grabFieldData();
+                        saveFile(user3Settings, fieldData);
+                        frame.dispose();
+                        saveParamsClosed = true;
+                    }
+                });;
+
+                (user4).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        File user4Settings = new File(System.getProperty("user.dir") + "//userParams//user4.parameters");
+                        grabFieldData();
+                        saveFile(user4Settings, fieldData);
+                        frame.dispose();
+                        saveParamsClosed = true;
+                    }
+                });;
+
+                frame.getContentPane().add(BorderLayout.CENTER, pane);
+                frame.pack();
+                frame.setLocationByPlatform(true);
+                frame.setVisible(true);
+                frame.setResizable(false);
+
+                frame.addWindowListener(new WindowAdapter() {
+                    public void windowClosing(WindowEvent e) {
+                        saveParamsClosed = true;
+                    }
+                });
+            }
+        });
+    }
+
+
+
+    /*
+     *
+     *
+     */
+    public void saveFile(File saveLocation, StringBuffer dataToSave) {
+        ArrayList<String> parametersList = new ArrayList<String>();
+        StringBuffer saveBuffer = new StringBuffer();
+        int index = 1;
+        int justReturn = 0;
+        int errorOccurred = 1;
+        int returnVal;
+
+        saveBuffer.append(dataToSave.toString());
+
+        returnVal = checkSelectedSections();
+
+        if( returnVal == justReturn ) {
+            return;
+        }
+                
+        /* Display the errors in a pop-up message dialog if any were encountered */
+        if( returnVal == errorOccurred ) {
+            JOptionPane.showMessageDialog(null, errors.toString());
+            return;
+        }
+
+        for(String retval : saveBuffer.toString().split("\r\n")) {
+            parametersList.add(retval);
+        }
+
+        saveBuffer.delete(0, saveBuffer.length());
+
+        saveBuffer.append("inputDirText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("outputDirText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("numOfThreadsText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("amountOfRamText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("AB_SCIEX_MS_ConverterDirText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("msconvertDirText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("indexmzXMLDirText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("DIA_Umpire_SE_Jar_DirText::" + parametersList.get(index++)).append("\r\n");
+        saveBuffer.append("mzxmlToMgfParamsText::" + parametersList.get(index++)).append("\r\n");
+
+        writeToFile(saveLocation, saveBuffer);
+    }
+
+
+
+    /*
+     * Adds the components to the map
+     *
+     */
+    protected void createChildren() {
+        Iterator<Map.Entry<String, GridItem>> it;
+
+        for (it = componentMap.entrySet().iterator(); it.hasNext(); ) {
+            Map.Entry<String, GridItem> item = it.next();
+            GridItem gridItem = item.getValue();
+
+            this.constraints.gridx = gridItem.xPos;
+            this.constraints.gridy = gridItem.yPos;
+            this.constraints.gridwidth = gridItem.colSpan;
+            this.constraints.gridheight = gridItem.rowSpan;
+
+            this.add(gridItem.component, this.constraints);
+        }
+    }
+
+
+
+    /*
+     * Checks if the files exist. Only checks the JTextFields
+     * 
+     */
+    private boolean checkIfFilesExist(int option) {
+
+        /* Will be set to false if any file paths entered do not exist (false=errors encountered) */
+        boolean filesExist = true;
+
+        /* A path variable to temporarily hold each path entered */
+        Path tempPath;
+
+        try{
+
+            /* Checking the General Info JTextFields */
+            if(option == generalInfoOpt) {
+
+                /* Checking if the input directory exists */
+                tempPath = Paths.get( inputDir_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append("input directory does not exist\r\n");
+                    filesExist = false;
+                }
+                
+                /* Checking if the output directory exists */
+                tempPath = Paths.get( outputDir_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append("output directory does not exist\r\n");
+                    filesExist = false;
+                }
+            }
+
+
+            /* Checking the diaUmpire_pipe.py Info JTextFields */
+            if(option == diaUmpireOpt) {
+
+                /* Checking if AB_SCIEX_MS_Converter.exe exists */
+                /*tempPath = Paths.get( ab_Sciex_Ms_ConverterDir_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append("AB_SCIEX_MS_Converter.exe does not exist\r\n");
+                    filesExist = false;
+                }*/
+
+                /* Checking if msconvert.exe exists */
+                tempPath = Paths.get( msconvertDir_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append("msconvert.exe does not exist\r\n");
+                    filesExist = false;
+                }
+                
+                /* Checking if indexMZXML.exe exists */
+                tempPath = Paths.get( indexmzXMLDir_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append("indexMZXML.exe does not exist\r\n");
+                    filesExist = false;
+                }
+                
+                /* Checking if DIA_Umpire_SE.jar exists */
+                tempPath = Paths.get( dia_Umpire_SeJarDir_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append("DIA_Umpire_SE.jar does not exist\r\n");
+                    filesExist = false;
+                }
+                
+                /* Checking if the .params file exists */
+                tempPath = Paths.get( mzxmlToMgfParams_Text.getText() );
+                if( !Files.exists(tempPath) ) {
+                    errors.append(".params file does not exist\r\n");
+                    filesExist = false;
+                }
+            }
+
+        }
+
+        /* 
+         * If any of the paths were entered incorrectly (illegal characters, etc.), delete all the
+         * errors that were found and display the message below
+         */
+        catch( Exception e ) {
+            errors.delete(0, errors.length());
+            errors.append("Some file paths have been entered incorrectly.\r\n");
+            errors.append("Make sure the paths are in this format:\r\n");
+            errors.append("          C:\\Inetpub\\tpp-bin\\sed.exe\r\n");
+            errors.append("Also check the URL in the taxonomy file");
+            filesExist = false;
+        }
+        
+        /*
+         * Returns true or false indicating if any errors were encountered
+         * (false = errors encountered)
+         */
+        return filesExist;
+    }
+
+
+
+
+    /*
+     *
+     *
+     */
+    private void grabFieldData() {
+
+        /* If the input or output directories end in a '\', delete that character */
+        String inputDirSTR = inputDir_Text.getText();
+        String outputDirSTR = outputDir_Text.getText();
+
+        fieldData.delete(0, fieldData.length());
+
+        if( inputDirSTR.lastIndexOf('\\') == inputDirSTR.length()-1 ) {
+            inputDirSTR = inputDirSTR.substring(0, inputDirSTR.length()-1);
+        }
+        if( outputDirSTR.lastIndexOf('\\') == outputDirSTR.length()-1 ) {
+            outputDirSTR = outputDirSTR.substring(0, outputDirSTR.length()-1);
+        }
+        
+        /* Begin filling out the fieldData StringBuffer (will become the input.parameters file) */
+        fieldData.append("Keep this line\r\n");
+        fieldData.append(inputDirSTR).append("\r\n");
+        fieldData.append(outputDirSTR).append("\r\n");
+        fieldData.append(numOfThreads_Text.getText()).append("\r\n");
+        fieldData.append(amountOfRam_Text.getText()).append("\r\n");
+        
+        /* Use the information entered if selected, else fill the StringBuffer with default info */
+        if(runDiaUmpire) {
+            fieldData.append(ab_Sciex_Ms_ConverterDir_Text.getText()).append("\r\n");
+            fieldData.append(msconvertDir_Text.getText()).append("\r\n");
+            fieldData.append(indexmzXMLDir_Text.getText()).append("\r\n");
+            fieldData.append(dia_Umpire_SeJarDir_Text.getText()).append("\r\n");
+            fieldData.append(mzxmlToMgfParams_Text.getText()).append("\r\n");
+        }
+        else {
+            fieldData.append("C:\\").append("\r\n");
+            fieldData.append("C:\\").append("\r\n");
+            fieldData.append("C:\\").append("\r\n");
+            fieldData.append("C:\\").append("\r\n");
+            fieldData.append("C:\\").append("\r\n");
+        }
+    /* Add the JCheckBox booleans to the StringBuffer */
+        fieldData.append(runDiaUmpire).append("\r\n");
+
+    }
+
+    /*
+     *
+     *
+     */
+    private void writeToFile() {
+
+        /* 
+         * Write the contents of the fieldData StringBuffer to the input.parameters file located in
+         * the current directory
+         */
+
+        String inputPathString = Paths.get(".").toAbsolutePath().normalize().toString();
+        inputPathString += "\\input.parameters";
+        
+        try {
+            BufferedWriter bufwriter = new BufferedWriter( new FileWriter(inputPathString) );
+            bufwriter.write(fieldData.toString());
+            bufwriter.close();
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+        
+    }
+
+
+
+    /*
+     *
+     *
+     */
+    private  void writeToFile( File file, StringBuffer buffer ) {
+        try {
+            BufferedWriter bufwriter = new BufferedWriter( new FileWriter(file.toString()) );
+            bufwriter.write(buffer.toString());
+            bufwriter.close();
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /*
+     *
+     *
+     */
+    private  void writeToFile( String outFile, StringBuffer buffer ) {
+        String inputPathString = Paths.get(".").toAbsolutePath().normalize().toString();
+        inputPathString += "\\";
+        inputPathString += outFile;
+        try {
+            BufferedWriter bufwriter = new BufferedWriter( new FileWriter(outFile) );
+            bufwriter.write(buffer.toString());
+            bufwriter.close();
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+    }
+
+    
+
+
+    /*
+     *
+     *
+     */
+    private void clearFieldData() {
+        /* Clears all the JTextFields */
+        for( JTextField field : textFields ) {
+            field.setText("");
+        }
+        
+        /* Resets the checkboxes and disables the appropriate JTextFields */
+        resetTextAndCheckboxes();
+    }
+
+
+
+    /*
+     *
+     *
+     */
+    private void setFieldData(String[] textLines) {
+        clearFieldData();
+
+        for (String line : textLines) {
+            String[] values = line.split("::");
+
+            if (values.length == 2) {
+                GridItem gridItem = componentMap.get(values[0]);
+
+                if (gridItem.isExportable && gridItem.component instanceof JTextComponent) {
+                    JTextComponent field = ((JTextComponent) gridItem.component);
+                    field.setText(values[1]);
+                    field.setCaretPosition(0);
+                }
+            }
+        }
+    }
+    
+    
+
+
+    /*
+     *
+     *
+     */
+    private void resetTextAndCheckboxes() {
+        /* Set all the textbox booleans to false */
+        runDiaUmpire = false;
+
+        /* Disable all the JTextFields */
+        for( JTextField element : textFields ) {
+            element.setEnabled(false);
+        }
+        
+        /* Uncheck all the JCheckBoxes */
+        for( JCheckBox element : checkBoxFields ) {
+            element.setSelected(false);
+        }
+        
+        /* Enable the general information JTextFields */
+        inputDir_Text.setEnabled(true);
+        outputDir_Text.setEnabled(true);
+        numOfThreads_Text.setEnabled(true);
+        amountOfRam_Text.setEnabled(true);
+    }
+
+
+    
+    /*
+     *
+     *
+     */
+    public static void main(String[] args) {
+        
+        /* Sets the frame and runs the application */
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                frame = new JFrame(APP_TITLE);
+                frame.setContentPane(new GetInput(APP_WIDTH, APP_HEIGHT));
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                frame.pack();
+                frame.setLocationRelativeTo(null);
+                frame.setVisible(true);
+                frame.setResizable(false);
+            }
+        });
+    }
+}
+    
